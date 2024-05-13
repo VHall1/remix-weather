@@ -75,3 +75,9 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+@media (max-width: theme(screens[sm])) {
+	.container {
+		@apply px-4;
+	}
+}
