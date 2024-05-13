@@ -3,25 +3,24 @@ import { Form, useActionData } from "@remix-run/react";
 import { SearchIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { weatherIconList } from "~/services/weather";
 import { getWeather } from "~/services/weather.server";
+import { Weather } from "./weather";
 
-export default function Weather() {
+export default function Index() {
 	const lastAction = useActionData<typeof action>();
-	const WeatherIcon = weatherIconList[lastAction?.icon || "02d"];
 
 	return (
 		<main className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-[#6BBCFF] to-[#3F7FFF] dark:from-[#1E2A3A] dark:to-[#0F1B2B]">
 			<div className="bg-white/90 dark:bg-gray-900/90 rounded-xl shadow-lg p-8 w-full max-w-md">
 				<div className="flex flex-col items-center justify-between space-y-6">
-					<div className="flex items-center space-x-4">
-						<WeatherIcon className="w-12 h-12 text-[#3F7FFF] dark:text-[#6BBCFF]" />
-						<div>
-							<h1 className="text-4xl font-bold">{lastAction?.temp}°C</h1>
-							<p className="text-gray-500 dark:text-gray-400">{lastAction?.name}</p>
-							<p className="text-gray-500 dark:text-gray-400">{lastAction?.desc}</p>
-						</div>
-					</div>
+					{lastAction ? (
+						<Weather
+							temp={lastAction.temp.toFixed(0)}
+							name={lastAction.name}
+							desc={lastAction.desc}
+							weatherIconKey={lastAction.icon}
+						/>
+					) : null}
 					<div className="w-full">
 						<Form method="post" className="flex items-center space-x-2">
 							<Input
