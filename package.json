@@ -8,7 +8,8 @@
     "dev": "remix vite:dev",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@remix-run/node": "^2.9.2",
@@ -36,7 +37,10 @@
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "postcss": "^8.4.38",
+    "prettier": "^3.2.5",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.1.6",
     "vite": "^5.1.0",
@@ -44,5 +48,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": "npm run lint",
+    "*.{js,ts,tsx,css,md}": "prettier --write"
   }
 }
