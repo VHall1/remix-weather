@@ -17,7 +17,7 @@ export default function WeatherPage() {
 						{weather ? (
 							<Weather
 								temp={weather.temp.toFixed(0)}
-								name={weather.name}
+								name={`${weather.name}, ${weather.country}`}
 								desc={weather.desc}
 								weatherIconKey={weather.icon}
 							/>
@@ -58,13 +58,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 	let weather = null;
 	if (q) {
-		const rawWeather = await getWeather(q);
-		weather = {
-			name: rawWeather.name,
-			temp: rawWeather.main.temp,
-			desc: rawWeather.weather[0].main,
-			icon: rawWeather.weather[0].icon,
-		};
+		try {
+			const rawWeather = await getWeather(decodeURI(q));
+			weather = {
+				name: rawWeather.name,
+				country: rawWeather.sys.country,
+				temp: rawWeather.main.temp,
+				desc: rawWeather.weather[0].main,
+				icon: rawWeather.weather[0].icon,
+			};
+		} catch (error) {
+			console.log(error);
+			if (!(error instanceof Error && error.message.includes("location not found"))) {
+				// TODO: flash error
+			}
+
+			throw error;
+		}
 	}
 
 	return json({ weather }, { headers: { "Cache-Control": "max-age=300, private" } });

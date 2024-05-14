@@ -17,7 +17,12 @@ export const getWeather = async (q: string) => {
 	if (response.ok) {
 		return weather;
 	} else {
-		const error = new Error("failed to fetch weather api");
+		let error;
+		if (response.status === 404) {
+			error = new Error("location not found");
+		}
+
+		error ||= new Error("failed to fetch weather api");
 		return Promise.reject(error);
 	}
 };
