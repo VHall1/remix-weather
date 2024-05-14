@@ -59,12 +59,7 @@ export default function WeatherPage() {
 									</Button>
 								</Form>
 							</noscript>
-							<Command
-								shouldFilter={false}
-								className="noscript-hidden"
-								onChange={() => setOpen(true)}
-								onBlur={() => setOpen(false)}
-							>
+							<Command shouldFilter={false} className="noscript-hidden" onChange={() => setOpen(true)}>
 								<CommandInput onValueChange={(q) => handleSearch(q)} />
 								<CommandList className={cn({ hidden: !open })}>
 									{locations.map((location) => (
