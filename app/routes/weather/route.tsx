@@ -59,12 +59,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 	if (!q) return json({ weather: null });
 
 	const rawWeather = await getWeather(q);
-	return json({
-		weather: {
-			name: rawWeather.name,
-			temp: rawWeather.main.temp,
-			desc: rawWeather.weather[0].main,
-			icon: rawWeather.weather[0].icon,
+	return json(
+		{
+			weather: {
+				name: rawWeather.name,
+				temp: rawWeather.main.temp,
+				desc: rawWeather.weather[0].main,
+				icon: rawWeather.weather[0].icon,
+			},
 		},
-	});
+		{
+			headers: {
+				"Cache-Control": "max-age=300, public",
+				Vary: "q",
+			},
+		},
+	);
 };
