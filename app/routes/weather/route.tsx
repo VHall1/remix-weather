@@ -1,18 +1,21 @@
 import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useFetcher, useLoaderData } from "@remix-run/react";
 import { SearchIcon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Command, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { Input } from "~/components/ui/input";
 import type { loader as locationSearchLoader } from "~/routes/location-search";
 import { getWeather } from "~/services/weather.server";
 import { Weather } from "./weather";
+import { cn } from "~/utils/cn";
 
 export default function WeatherPage() {
 	const { weather } = useLoaderData<typeof loader>();
 	const weatherFetcher = useFetcher<typeof action>();
 	const locationFetcher = useFetcher<typeof locationSearchLoader>();
 	const locations = locationFetcher.data?.locations || [];
+	const [open, setOpen] = useState(false);
 
 	const handleSearch = (q: string) => {
 		locationFetcher.submit(
@@ -56,9 +59,14 @@ export default function WeatherPage() {
 									</Button>
 								</Form>
 							</noscript>
-							<Command shouldFilter={false} className="noscript-hidden">
+							<Command
+								shouldFilter={false}
+								className="noscript-hidden"
+								onFocus={() => setOpen(true)}
+								onBlur={() => setOpen(false)}
+							>
 								<CommandInput onValueChange={(q) => handleSearch(q)} />
-								<CommandList>
+								<CommandList className={cn({ hidden: !open })}>
 									{locations.map((location) => (
 										<CommandItem key={location.geohash} onSelect={() => handleSelect(...location.latLong)}>
 											{location.name} ({location.area})
