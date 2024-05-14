@@ -77,5 +77,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 		}
 	}
 
+	// This cache is not very consistent. Only time I've noticed it actually working is when toggling between themes
+	// Might have to look for a more robust caching solution (probably server cache rather than http)
 	return json({ weather }, { headers: { "Cache-Control": "max-age=300, private" } });
 };
