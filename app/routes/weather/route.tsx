@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs, json, redirect, type ActionFunctionArgs } from "@remix-run/node";
+import { HeadersFunction, LoaderFunctionArgs, json, redirect, type ActionFunctionArgs } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 import { SearchIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -53,26 +53,32 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 	return redirect(url.toString());
 };
 
+export const headers: HeadersFunction = () => ({
+	"Cache-Control": "max-age=300, private",
+});
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const url = new URL(request.url);
 	const q = url.searchParams.get("q");
-	if (!q) return json({ weather: null });
 
-	const rawWeather = await getWeather(q);
+	let weather = null;
+	if (q) {
+		const rawWeather = await getWeather(q);
+		weather = {
+			name: rawWeather.name,
+			temp: rawWeather.main.temp,
+			desc: rawWeather.weather[0].main,
+			icon: rawWeather.weather[0].icon,
+		};
+	}
+
 	return json(
-		{
-			weather: {
-				name: rawWeather.name,
-				temp: rawWeather.main.temp,
-				desc: rawWeather.weather[0].main,
-				icon: rawWeather.weather[0].icon,
-			},
-		},
-		{
-			headers: {
-				"Cache-Control": "max-age=300, public",
-				Vary: "q",
-			},
-		},
+		{ weather },
+		// {
+		// 	headers: {
+		// 		"Cache-Control": "max-age=300, private",
+		// 		// Vary: "q",
+		// 	},
+		// },
 	);
 };
