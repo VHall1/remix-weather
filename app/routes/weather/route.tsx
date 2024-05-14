@@ -1,13 +1,32 @@
 import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, useFetcher, useLoaderData } from "@remix-run/react";
 import { SearchIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { Command, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { Input } from "~/components/ui/input";
+import type { loader as locationSearchLoader } from "~/routes/location-search";
 import { getWeather } from "~/services/weather.server";
 import { Weather } from "./weather";
 
 export default function WeatherPage() {
 	const { weather } = useLoaderData<typeof loader>();
+	const weatherFetcher = useFetcher<typeof action>();
+	const locationFetcher = useFetcher<typeof locationSearchLoader>();
+	const locations = locationFetcher.data?.locations || [];
+
+	const handleSearch = (q: string) => {
+		locationFetcher.submit(
+			{ q },
+			{
+				method: "get",
+				action: "/location-search",
+			},
+		);
+	};
+
+	const handleSelect = (lat: number, lon: number) => {
+		weatherFetcher.submit({ intent: "latlon", lat, lon }, { method: "post" });
+	};
 
 	return (
 		<main className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-[#6BBCFF] to-[#3F7FFF] dark:from-[#1E2A3A] dark:to-[#0F1B2B]">
@@ -23,17 +42,30 @@ export default function WeatherPage() {
 							/>
 						) : null}
 						<div className="w-full">
-							<Form method="post" className="flex items-center space-x-2">
-								<Input
-									name="q"
-									className="flex-1 bg-gray-100 dark:bg-gray-800 border-none focus:ring-0"
-									placeholder="Search for a location"
-									type="text"
-								/>
-								<Button className="p-2" variant="ghost" type="submit">
-									<SearchIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-								</Button>
-							</Form>
+							<noscript>
+								{/* noscript fallback. good old form */}
+								<Form method="post" className="flex items-center space-x-2">
+									<Input
+										name="q"
+										className="flex-1 bg-gray-100 dark:bg-gray-800 border-none focus:ring-0"
+										placeholder="Search for a location"
+										type="text"
+									/>
+									<Button className="p-2" variant="ghost" type="submit" name="intent" value="location">
+										<SearchIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+									</Button>
+								</Form>
+							</noscript>
+							<Command shouldFilter={false} className="noscript-hidden">
+								<CommandInput onValueChange={(q) => handleSearch(q)} />
+								<CommandList>
+									{locations.map((location) => (
+										<CommandItem key={location.geohash} onSelect={() => handleSelect(...location.latLong)}>
+											{location.name} ({location.area})
+										</CommandItem>
+									))}
+								</CommandList>
+							</Command>
 						</div>
 					</div>
 				</div>
@@ -44,36 +76,83 @@ export default function WeatherPage() {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
-	const q = formData.get("q");
-	if (!q) return null;
-
+	const intent = formData.get("intent")?.toString();
 	const url = new URL(request.url);
-	url.searchParams.set("q", q.toString());
+	switch (intent) {
+		case "latlon": {
+			const lat = formData.get("lat")?.toString();
+			const lon = formData.get("lon")?.toString();
+			if (!lat || !lon) return null;
+			url.searchParams.set("lat", lat);
+			url.searchParams.set("lon", lon);
+			url.searchParams.delete("q");
+			break;
+		}
+		case "location": {
+			const q = formData.get("q")?.toString();
+			if (!q) return null;
+			url.searchParams.set("q", q);
+			url.searchParams.delete("lat");
+			url.searchParams.delete("lon");
+			break;
+		}
+		default:
+			return null;
+	}
+	url.searchParams.set("intent", intent);
 	return redirect(`.?${url.searchParams.toString()}`);
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const url = new URL(request.url);
-	const q = url.searchParams.get("q");
+	const intent = url.searchParams.get("intent");
 
 	let weather = null;
-	if (q) {
-		try {
-			const rawWeather = await getWeather(decodeURI(q));
-			weather = {
-				name: rawWeather.name,
-				country: rawWeather.sys.country,
-				temp: rawWeather.main.temp,
-				desc: rawWeather.weather[0].main,
-				icon: rawWeather.weather[0].icon,
-			};
-		} catch (error) {
-			console.log(error);
-			if (!(error instanceof Error && error.message.includes("location not found"))) {
-				// TODO: flash error
-			}
+	switch (intent) {
+		case "latlon": {
+			const lat = url.searchParams.get("lat")?.toString();
+			const lon = url.searchParams.get("lon")?.toString();
+			if (!lat || !lon) break;
+			try {
+				const rawWeather = await getWeather({ lat, lon });
+				weather = {
+					name: rawWeather.name,
+					country: rawWeather.sys.country,
+					temp: rawWeather.main.temp,
+					desc: rawWeather.weather[0].main,
+					icon: rawWeather.weather[0].icon,
+				};
+			} catch (error) {
+				console.log(error);
+				if (!(error instanceof Error && error.message.includes("location not found"))) {
+					// TODO: flash error
+				}
 
-			throw error;
+				throw error;
+			}
+			break;
+		}
+		case "location": {
+			const q = url.searchParams.get("q")?.toString();
+			if (!q) break;
+			try {
+				const rawWeather = await getWeather({ q });
+				weather = {
+					name: rawWeather.name,
+					country: rawWeather.sys.country,
+					temp: rawWeather.main.temp,
+					desc: rawWeather.weather[0].main,
+					icon: rawWeather.weather[0].icon,
+				};
+			} catch (error) {
+				console.log(error);
+				if (!(error instanceof Error && error.message.includes("location not found"))) {
+					// TODO: flash error
+				}
+
+				throw error;
+			}
+			break;
 		}
 	}
 

@@ -14,7 +14,8 @@ import {
 	useRouteLoaderData,
 } from "@remix-run/react";
 import { MoonIcon, SunIcon } from "lucide-react";
-import stylesheet from "~/tailwind.css?url";
+import noscriptStyles from "~/noscript.css?url";
+import tailwindStyles from "~/tailwind.css?url";
 import Error from "./components/error";
 import { Button } from "./components/ui/button";
 import { getTheme } from "./services/theme.server";
@@ -31,6 +32,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<title>Remix Weather</title>
 				<Meta />
 				<Links />
+				<noscript>
+					<link rel="stylesheet" href={noscriptStyles} />
+				</noscript>
 			</head>
 			<body>
 				{children}
@@ -84,4 +88,4 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 	return json({ theme });
 };
 
-export const links: LinksFunction = () => [{ rel: "stylesheet", href: stylesheet }];
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: tailwindStyles }];
