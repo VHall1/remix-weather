@@ -1,4 +1,7 @@
 import { createCookieSessionStorage } from "@remix-run/node";
+import invariant from "tiny-invariant";
+
+invariant(process.env.THEME_SECRET, "THEME_SECRET must be set");
 
 export const themeKeys = ["dark", "light"] as const;
 export type Theme = (typeof themeKeys)[number];
@@ -8,6 +11,8 @@ export const themeStorage = createCookieSessionStorage<{ theme: Theme }>({
 		name: "remix-weather__theme",
 		sameSite: "lax",
 		path: "/",
+		httpOnly: true,
+		secrets: [process.env.THEME_SECRET],
 		secure: process.env.NODE_ENV === "production",
 	},
 });
