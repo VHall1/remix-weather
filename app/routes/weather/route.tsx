@@ -1,4 +1,4 @@
-import { HeadersFunction, LoaderFunctionArgs, json, redirect, type ActionFunctionArgs } from "@remix-run/node";
+import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 import { SearchIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -42,10 +42,6 @@ export default function WeatherPage() {
 	);
 }
 
-export const headers: HeadersFunction = () => ({
-	"Cache-Control": "max-age=300, private",
-});
-
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
 	const q = formData.get("q");
@@ -71,5 +67,5 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 		};
 	}
 
-	return json({ weather });
+	return json({ weather }, { headers: { "Cache-Control": "max-age=300, private" } });
 };
