@@ -1,5 +1,5 @@
 import invariant from "tiny-invariant";
-import { weatherIconList } from "./weather";
+import type { weatherIconList } from "./weather";
 
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";

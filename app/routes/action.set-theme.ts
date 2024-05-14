@@ -1,4 +1,4 @@
-import { ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs } from "@remix-run/node";
 import { safeRedirect } from "~/services/http.server";
 import { getThemeSession, themeKeys, themeStorage, type Theme } from "~/services/theme.server";
 
