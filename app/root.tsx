@@ -6,21 +6,25 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	isRouteErrorResponse,
 	useFetcher,
 	useLoaderData,
 	useLocation,
+	useRouteError,
+	useRouteLoaderData,
 } from "@remix-run/react";
 import { MoonIcon, SunIcon } from "lucide-react";
 import stylesheet from "~/tailwind.css?url";
+import Error from "./components/error";
 import { Button } from "./components/ui/button";
 import { getTheme } from "./services/theme.server";
 import { cn } from "./utils/cn";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const { theme } = useLoaderData<typeof loader>();
+	const loaderData = useRouteLoaderData<typeof loader>("root");
 
 	return (
-		<html lang="en" className={cn({ dark: theme !== "light" })}>
+		<html lang="en" className={cn({ dark: loaderData?.theme !== "light" })}>
 			<head>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -54,6 +58,25 @@ export default function App() {
 			<Outlet />
 		</>
 	);
+}
+
+export function ErrorBoundary() {
+	const error = useRouteError();
+
+	if (isRouteErrorResponse(error)) {
+		console.error("CatchBoundary", error);
+		switch (error.status) {
+			case 404: {
+				return <Error status={error.status} statusText={"Oops, the page you are looking for could not be found."} />;
+			}
+			default: {
+				return <Error status={error.status} statusText={error.statusText} />;
+			}
+		}
+	}
+
+	console.error(error);
+	return <Error status={500} statusText="Oops, something did not go well." />;
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
