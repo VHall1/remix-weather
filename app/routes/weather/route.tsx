@@ -1,25 +1,25 @@
-import { json, type ActionFunctionArgs } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
+import { LoaderFunctionArgs, json, redirect, type ActionFunctionArgs } from "@remix-run/node";
+import { Form, useLoaderData } from "@remix-run/react";
 import { SearchIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { getWeather } from "~/services/weather.server";
 import { Weather } from "./weather";
 
-export default function Index() {
-	const lastAction = useActionData<typeof action>();
+export default function WeatherPage() {
+	const { weather } = useLoaderData<typeof loader>();
 
 	return (
 		<main className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-[#6BBCFF] to-[#3F7FFF] dark:from-[#1E2A3A] dark:to-[#0F1B2B]">
 			<div className="container w-full max-w-md">
 				<div className="bg-white/90 dark:bg-gray-900/90 rounded-xl shadow-lg p-8">
 					<div className="flex flex-col items-center justify-between space-y-6">
-						{lastAction ? (
+						{weather ? (
 							<Weather
-								temp={lastAction.temp.toFixed(0)}
-								name={lastAction.name}
-								desc={lastAction.desc}
-								weatherIconKey={lastAction.icon}
+								temp={weather.temp.toFixed(0)}
+								name={weather.name}
+								desc={weather.desc}
+								weatherIconKey={weather.icon}
 							/>
 						) : null}
 						<div className="w-full">
@@ -47,11 +47,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 	const q = formData.get("q");
 	if (!q) return null;
 
-	const weather = await getWeather(q.toString());
+	const url = new URL(request.url);
+	url.searchParams.set("q", q.toString());
+
+	return redirect(url.toString());
+};
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+	const url = new URL(request.url);
+	const q = url.searchParams.get("q");
+	if (!q) return json({ weather: null });
+
+	const rawWeather = await getWeather(q);
 	return json({
-		name: weather.name,
-		temp: weather.main.temp,
-		desc: weather.weather[0].main,
-		icon: weather.weather[0].icon,
+		weather: {
+			name: rawWeather.name,
+			temp: rawWeather.main.temp,
+			desc: rawWeather.weather[0].main,
+			icon: rawWeather.weather[0].icon,
+		},
 	});
 };
