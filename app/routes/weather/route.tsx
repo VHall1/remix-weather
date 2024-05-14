@@ -42,6 +42,10 @@ export default function WeatherPage() {
 	);
 }
 
+export const headers: HeadersFunction = () => ({
+	"Cache-Control": "max-age=300, private",
+});
+
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
 	const q = formData.get("q");
@@ -49,13 +53,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 	const url = new URL(request.url);
 	url.searchParams.set("q", q.toString());
-
-	return redirect(url.toString());
+	return redirect(`.?${url.searchParams.toString()}`);
 };
-
-export const headers: HeadersFunction = () => ({
-	"Cache-Control": "max-age=300, private",
-});
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const url = new URL(request.url);
@@ -72,13 +71,5 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 		};
 	}
 
-	return json(
-		{ weather },
-		// {
-		// 	headers: {
-		// 		"Cache-Control": "max-age=300, private",
-		// 		// Vary: "q",
-		// 	},
-		// },
-	);
+	return json({ weather });
 };
