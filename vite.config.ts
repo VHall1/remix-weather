@@ -6,8 +6,5 @@ import tsconfigPaths from "vite-tsconfig-paths";
 installGlobals();
 
 export default defineConfig({
-	plugins: [
-		remix({ basename: process.env.NODE_ENV !== "production" ? "/" : "weather.victorhalldev.com" }),
-		tsconfigPaths(),
-	],
+  plugins: [remix(), tsconfigPaths()],
 });
