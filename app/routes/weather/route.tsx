@@ -68,7 +68,13 @@ export default function WeatherPage() {
 								<CommandInput onValueChange={(q) => handleSearch(q)} />
 								<CommandList className={cn({ hidden: !open })}>
 									{locations.map((location) => (
-										<CommandItem key={location.geohash} onSelect={() => handleSelect(...location.latLong)}>
+										<CommandItem
+											key={location.geohash}
+											onSelect={() => {
+												setOpen(false);
+												handleSelect(...location.latLong);
+											}}
+										>
 											{location.name} ({location.area})
 										</CommandItem>
 									))}
