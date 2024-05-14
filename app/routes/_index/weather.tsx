@@ -1,7 +1,6 @@
 import { weatherIconList } from "~/services/weather";
 
 export function Weather({ temp, name, desc, weatherIconKey }: WeatherProps) {
-	console.log(weatherIconKey);
 	const WeatherIcon = weatherIconList[weatherIconKey];
 	return (
 		<div className="flex items-center space-x-4">
