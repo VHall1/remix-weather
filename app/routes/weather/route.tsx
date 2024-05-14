@@ -62,7 +62,7 @@ export default function WeatherPage() {
 							<Command
 								shouldFilter={false}
 								className="noscript-hidden"
-								onFocus={() => setOpen(true)}
+								onChange={() => setOpen(true)}
 								onBlur={() => setOpen(false)}
 							>
 								<CommandInput onValueChange={(q) => handleSearch(q)} />
