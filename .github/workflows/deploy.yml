@@ -40,6 +40,7 @@ jobs:
       - name: Start pm2
         env:
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+          THEME_SECRET: ${{ secrets.THEME_SECRET }}
           PORT: ${{ secrets.PORT }}
         run: |
           pm2 start pm2.config.cjs

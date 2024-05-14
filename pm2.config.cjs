@@ -8,6 +8,7 @@ module.exports = {
 			watch: false,
 			env: {
 				WEATHER_API_KEY: process.env.WEATHER_API_KEY,
+				THEME_SECRET: process.env.THEME_SECRET,
 			},
 		},
 	],
