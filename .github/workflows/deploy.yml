@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Send discord notification
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          curl -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"content\":\"\",\"tts\":false,\"embeds\":[{\"description\":\"Started a new deploy to [$GITHUB_REPOSITORY](https://github.com/$GITHUB_REPOSITORY)\",\"color\":2326507,\"fields\":[],\"author\":{\"name\":\"$GITHUB_ACTOR\",\"url\":\"https://github.com/$GITHUB_ACTOR\",\"icon_url\":\"https://github.com/$GITHUB_ACTOR.png\"},\"footer\":{\"text\":\"$GITHUB_REPOSITORY\",\"icon_url\":\"https://github.com/github.png\"}}],\"components\":[],\"actions\":{}}" $WEBHOOK_URL
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "21"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build remix
+        run: npm run build
+
+      - name: Stop existing pm2 instances
+        run: |
+          pm2 delete remix-weather || true
+
+      - name: Start pm2
+        env:
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+          PORT: ${{ secrets.PORT }}
+        run: |
+          pm2 start pm2.config.cjs
+
+      - name: Send discord notification
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          curl -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"content\":\"\",\"tts\":false,\"embeds\":[{\"description\":\"Successfully deployed to [$GITHUB_REPOSITORY](https://github.com/$GITHUB_REPOSITORY)\",\"color\":65280,\"fields\":[],\"author\":{\"name\":\"$GITHUB_ACTOR\",\"url\":\"https://github.com/$GITHUB_ACTOR\",\"icon_url\":\"https://github.com/$GITHUB_ACTOR.png\"},\"footer\":{\"text\":\"$GITHUB_REPOSITORY\",\"icon_url\":\"https://github.com/github.png\"}}],\"components\":[],\"actions\":{}}" $WEBHOOK_URL
+
+      - name: Cleanup
+        run: |
+          pm2 save
