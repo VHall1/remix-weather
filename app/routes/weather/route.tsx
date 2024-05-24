@@ -67,10 +67,10 @@ export default function WeatherPage() {
 											key={location.geohash}
 											onSelect={() => {
 												setOpen(false);
-												handleSelect(...location.latLong);
+												handleSelect(location.lat, location.lon);
 											}}
 										>
-											{location.name} ({location.area})
+											{location.name}, {location.country}
 										</CommandItem>
 									))}
 								</CommandList>
