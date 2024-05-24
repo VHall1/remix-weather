@@ -6,9 +6,13 @@ invariant(process.env.THEME_SECRET, "THEME_SECRET must be set");
 export const themeKeys = ["dark", "light"] as const;
 export type Theme = (typeof themeKeys)[number];
 
-export const themeStorage = createCookieSessionStorage<{ theme: Theme }>({
+export const {
+	commitSession,
+	destroySession,
+	getSession: getSessionFromCookie,
+} = createCookieSessionStorage<{ theme: Theme }>({
 	cookie: {
-		name: "remix-weather__theme",
+		name: "remix-weather__session",
 		sameSite: "lax",
 		path: "/",
 		httpOnly: true,
@@ -17,13 +21,13 @@ export const themeStorage = createCookieSessionStorage<{ theme: Theme }>({
 	},
 });
 
-export function getThemeSession(request: Request) {
+export function getSession(request: Request) {
 	const cookie = request.headers.get("Cookie");
-	return themeStorage.getSession(cookie);
+	return getSessionFromCookie(cookie);
 }
 
 export async function getTheme(request: Request) {
-	const session = await getThemeSession(request);
+	const session = await getSession(request);
 	return session.get("theme");
 }
 

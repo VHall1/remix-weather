@@ -18,7 +18,7 @@ import noscriptStyles from "~/noscript.css?url";
 import tailwindStyles from "~/tailwind.css?url";
 import Error from "./components/error";
 import { Button } from "./components/ui/button";
-import { getTheme } from "./services/theme.server";
+import { getTheme } from "./services/session.server";
 import { cn } from "./utils/cn";
 
 export function Layout({ children }: { children: React.ReactNode }) {
