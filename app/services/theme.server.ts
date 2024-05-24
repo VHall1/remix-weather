@@ -26,3 +26,7 @@ export async function getTheme(request: Request) {
 	const session = await getThemeSession(request);
 	return session.get("theme");
 }
+
+export function isValidTheme(theme: string): theme is Theme {
+	return themeKeys.includes(theme as Theme);
+}
