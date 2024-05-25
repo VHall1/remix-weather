@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Command, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { Input } from "~/components/ui/input";
-import type { loader as locationSearchLoader } from "~/routes/location-search";
+import type { loader as locationSearchLoader } from "~/routes/weather.search";
 import { getWeather } from "~/services/weather.server";
 import { cn } from "~/utils/cn";
 import { Weather } from "./weather";
@@ -30,7 +30,7 @@ export default function WeatherPage() {
 				{ q },
 				{
 					method: "get",
-					action: "/location-search",
+					action: "/weather/search",
 				},
 			);
 		}, 1000);
@@ -41,54 +41,48 @@ export default function WeatherPage() {
 	};
 
 	return (
-		<main className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-[#6BBCFF] to-[#3F7FFF] dark:from-[#1E2A3A] dark:to-[#0F1B2B]">
-			<div className="container w-full max-w-md">
-				<div className="bg-white/90 dark:bg-gray-900/90 rounded-xl shadow-lg p-8">
-					<div className="flex flex-col items-center justify-between space-y-6">
-						{weather ? (
-							<Weather
-								temp={weather.temp.toFixed(0)}
-								name={`${weather.name}, ${weather.country}`}
-								desc={weather.desc}
-								weatherIconKey={weather.icon}
-							/>
-						) : null}
-						<div className="w-full">
-							<noscript>
-								{/* noscript fallback. good old form */}
-								<Form method="post" className="flex items-center space-x-2">
-									<Input
-										name="q"
-										className="flex-1 bg-gray-100 dark:bg-gray-800 border-none focus:ring-0"
-										placeholder="Search for a location"
-										type="text"
-									/>
-									<Button className="p-2" variant="ghost" type="submit" name="intent" value="location">
-										<SearchIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-									</Button>
-								</Form>
-							</noscript>
-							<Command shouldFilter={false} className="noscript-hidden" onChange={() => setOpen(true)}>
-								<CommandInput onValueChange={(q) => handleSearch(q)} />
-								<CommandList className={cn({ hidden: !open })}>
-									{locations.map((location) => (
-										<CommandItem
-											key={location.geohash}
-											onSelect={() => {
-												setOpen(false);
-												handleSelect(location.lat, location.lon);
-											}}
-										>
-											{location.name}, {location.country}
-										</CommandItem>
-									))}
-								</CommandList>
-							</Command>
-						</div>
-					</div>
-				</div>
+		<div className="flex flex-col items-center justify-between space-y-6">
+			{weather ? (
+				<Weather
+					temp={weather.temp.toFixed(0)}
+					name={`${weather.name}, ${weather.country}`}
+					desc={weather.desc}
+					weatherIconKey={weather.icon}
+				/>
+			) : null}
+			<div className="w-full">
+				<noscript>
+					{/* noscript fallback. good old form */}
+					<Form method="post" className="flex items-center space-x-2">
+						<Input
+							name="q"
+							className="flex-1 bg-gray-100 dark:bg-gray-800 border-none focus:ring-0"
+							placeholder="Search for a location"
+							type="text"
+						/>
+						<Button className="p-2" variant="ghost" type="submit" name="intent" value="location">
+							<SearchIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+						</Button>
+					</Form>
+				</noscript>
+				<Command shouldFilter={false} className="noscript-hidden" onChange={() => setOpen(true)}>
+					<CommandInput onValueChange={(q) => handleSearch(q)} />
+					<CommandList className={cn({ hidden: !open })}>
+						{locations.map((location) => (
+							<CommandItem
+								key={location.geohash}
+								onSelect={() => {
+									setOpen(false);
+									handleSelect(location.lat, location.lon);
+								}}
+							>
+								{location.name}, {location.country}
+							</CommandItem>
+						))}
+					</CommandList>
+				</Command>
 			</div>
-		</main>
+		</div>
 	);
 }
 
