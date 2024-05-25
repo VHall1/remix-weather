@@ -1,31 +1,40 @@
 import invariant from "tiny-invariant";
+import { makeCache } from "~/utils/cache.server";
 import type { weatherIconList } from "./weather";
+import cachified from "@epic-web/cachified";
 
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";
-
 invariant(WEATHER_API_KEY, "WEATHER_API_KEY is required");
 
+const cache = makeCache();
+
 export const getWeather = async (lat: string, lon: string) => {
-	const url = new URL(WEATHER_API_URL);
-	url.searchParams.set("lat", lat);
-	url.searchParams.set("lon", lon);
-	url.searchParams.set("units", "metric");
-	url.searchParams.set("appid", WEATHER_API_KEY);
+	return cachified({
+		key: `weather-${lat}-${lon}`,
+		cache,
+		async getFreshValue() {
+			const url = new URL(WEATHER_API_URL);
+			url.searchParams.set("lat", lat);
+			url.searchParams.set("lon", lon);
+			url.searchParams.set("units", "metric");
+			url.searchParams.set("appid", WEATHER_API_KEY);
 
-	const response = await fetch(url);
-	const weather: WeatherData = await response.json();
-	if (response.ok) {
-		return weather;
-	} else {
-		let error;
-		if (response.status === 404) {
-			error = new Error("location not found");
-		}
+			const response = await fetch(url);
+			const weather: WeatherData = await response.json();
+			if (response.ok) {
+				return weather;
+			} else {
+				let error;
+				if (response.status === 404) {
+					error = new Error("location not found");
+				}
 
-		error ||= new Error("failed to fetch weather api");
-		return Promise.reject(error);
-	}
+				error ||= new Error("failed to fetch weather api");
+				return Promise.reject(error);
+			}
+		},
+	});
 };
 
 interface WeatherData {
