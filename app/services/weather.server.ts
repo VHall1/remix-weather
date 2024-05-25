@@ -6,11 +6,10 @@ const WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";
 
 invariant(WEATHER_API_KEY, "WEATHER_API_KEY is required");
 
-export const getWeather = async ({ q, lat, lon }: { q?: string; lat?: string; lon?: string }) => {
+export const getWeather = async (lat: string, lon: string) => {
 	const url = new URL(WEATHER_API_URL);
-	if (q) url.searchParams.set("q", q);
-	if (lat) url.searchParams.set("lat", lat);
-	if (lon) url.searchParams.set("lon", lon);
+	url.searchParams.set("lat", lat);
+	url.searchParams.set("lon", lon);
 	url.searchParams.set("units", "metric");
 	url.searchParams.set("appid", WEATHER_API_KEY);
 
