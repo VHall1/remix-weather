@@ -1,14 +1,14 @@
 import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useFetcher, useLoaderData } from "@remix-run/react";
 import { SearchIcon } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Command, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { Input } from "~/components/ui/input";
 import type { loader as locationSearchLoader } from "~/routes/location-search";
 import { getWeather } from "~/services/weather.server";
-import { Weather } from "./weather";
 import { cn } from "~/utils/cn";
+import { Weather } from "./weather";
 
 export default function WeatherPage() {
 	const { weather } = useLoaderData<typeof loader>();
@@ -17,14 +17,23 @@ export default function WeatherPage() {
 	const locations = locationFetcher.data?.locations || [];
 	const [open, setOpen] = useState(false);
 
+	const timeoutRef = useRef<number>();
+	// not really updating state here, so should be able to
+	// get away with not memoizing this function
 	const handleSearch = (q: string) => {
-		locationFetcher.submit(
-			{ q },
-			{
-				method: "get",
-				action: "/location-search",
-			},
-		);
+		if (timeoutRef.current) {
+			window.clearTimeout(timeoutRef.current);
+		}
+
+		timeoutRef.current = window.setTimeout(() => {
+			locationFetcher.submit(
+				{ q },
+				{
+					method: "get",
+					action: "/location-search",
+				},
+			);
+		}, 1000);
 	};
 
 	const handleSelect = (lat: number, lon: number) => {
