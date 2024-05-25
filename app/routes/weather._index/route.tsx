@@ -1,7 +1,9 @@
-import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
+import { parseWithZod } from "@conform-to/zod";
+import { redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useFetcher, useLoaderData } from "@remix-run/react";
 import { SearchIcon } from "lucide-react";
 import { useRef, useState } from "react";
+import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Command, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
 import { Input } from "~/components/ui/input";
@@ -97,78 +99,40 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 			if (!lat || !lon) return null;
 			url.searchParams.set("lat", lat);
 			url.searchParams.set("lon", lon);
-			url.searchParams.delete("q");
 			break;
 		}
 		case "location": {
 			const q = formData.get("q")?.toString();
-			if (!q) return null;
-			url.searchParams.set("q", q);
-			url.searchParams.delete("lat");
-			url.searchParams.delete("lon");
-			break;
+			return redirect(`/weather/search?q=${q}`);
 		}
 		default:
 			return null;
 	}
-	url.searchParams.set("intent", intent);
+
 	return redirect(`.?${url.searchParams.toString()}`);
 };
 
+const loaderSchema = z.object({
+	lat: z.string(),
+	lon: z.string(),
+});
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const url = new URL(request.url);
-	const intent = url.searchParams.get("intent");
+	const submission = parseWithZod(url.searchParams, { schema: loaderSchema });
 
-	let weather = null;
-	switch (intent) {
-		case "latlon": {
-			const lat = url.searchParams.get("lat")?.toString();
-			const lon = url.searchParams.get("lon")?.toString();
-			if (!lat || !lon) break;
-			try {
-				const rawWeather = await getWeather({ lat, lon });
-				weather = {
-					name: rawWeather.name,
-					country: rawWeather.sys.country,
-					temp: rawWeather.main.temp,
-					desc: rawWeather.weather[0].main,
-					icon: rawWeather.weather[0].icon,
-				};
-			} catch (error) {
-				console.log(error);
-				if (!(error instanceof Error && error.message.includes("location not found"))) {
-					// TODO: flash error
-				}
-
-				throw error;
-			}
-			break;
-		}
-		case "location": {
-			const q = url.searchParams.get("q")?.toString();
-			if (!q) break;
-			try {
-				const rawWeather = await getWeather({ q });
-				weather = {
-					name: rawWeather.name,
-					country: rawWeather.sys.country,
-					temp: rawWeather.main.temp,
-					desc: rawWeather.weather[0].main,
-					icon: rawWeather.weather[0].icon,
-				};
-			} catch (error) {
-				console.log(error);
-				if (!(error instanceof Error && error.message.includes("location not found"))) {
-					// TODO: flash error
-				}
-
-				throw error;
-			}
-			break;
-		}
+	if (submission.status !== "success") {
+		return { weather: null };
 	}
 
-	// This cache is not very consistent. Only time I've noticed it actually working is when toggling between themes
-	// Might have to look for a more robust caching solution (probably server cache rather than http)
-	return json({ weather }, { headers: { "Cache-Control": "max-age=300, private" } });
+	const rawWeather = await getWeather(submission.value.lat, submission.value.lon);
+	const weather = {
+		name: rawWeather.name,
+		country: rawWeather.sys.country,
+		temp: rawWeather.main.temp,
+		desc: rawWeather.weather[0].main,
+		icon: rawWeather.weather[0].icon,
+	};
+
+	return { weather };
 };
