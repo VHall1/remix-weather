@@ -9,7 +9,6 @@ import {
 	isRouteErrorResponse,
 	useFetcher,
 	useLoaderData,
-	useLocation,
 	useRouteError,
 	useRouteLoaderData,
 } from "@remix-run/react";
@@ -48,12 +47,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
 	const { theme } = useLoaderData<typeof loader>();
 	const themeFetcher = useFetcher();
-	const location = useLocation();
 
 	return (
 		<>
 			<themeFetcher.Form method="post" action="/action/set-theme" preventScrollReset>
-				<input type="hidden" name="returnTo" value={location.pathname + location.search} />
 				<input type="hidden" name="theme" value={theme === "light" ? "dark" : "light"} />
 				<Button className="fixed right-2 bottom-2" size="icon" variant="outline">
 					{theme === "light" ? <SunIcon /> : <MoonIcon />}
